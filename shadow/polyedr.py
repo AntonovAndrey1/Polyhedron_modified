@@ -61,7 +61,9 @@ class Edge:
         if shade.is_degenerate():
             return
         # Преобразование списка «просветов», если тень невырождена
+        # Вычитаем из единичного отрезка все тени
         gaps = [s.subtraction(shade) for s in self.gaps]
+        # Удаление вырожденных отрезков
         self.gaps = [
             s for s in reduce(add, gaps, []) if not s.is_degenerate()]
 
@@ -127,6 +129,8 @@ class Polyedr:
 
         # списки вершин, рёбер и граней полиэдра
         self.vertexes, self.edges, self.facets = [], [], []
+        self.real_vertexes, self.real_edges, self.real_facets = [], [], []
+        self.inv_edges = []
 
         # список строк файла
         with open(file) as f:
@@ -144,8 +148,12 @@ class Polyedr:
                 elif i < nv + 2:
                     # задание всех вершин полиэдра
                     x, y, z = (float(x) for x in line.split())
+                    # меняется на коэффициент гомотетии
                     self.vertexes.append(R3(x, y, z).rz(
                         alpha).ry(beta).rz(gamma) * c)
+                    # вершины в настоящих координатах без гомотетии
+                    self.real_vertexes.append(R3(x, y, z).rz(
+                        alpha).ry(beta).rz(gamma))
                 else:
                     # вспомогательный массив
                     buf = line.split()
@@ -153,11 +161,17 @@ class Polyedr:
                     size = int(buf.pop(0))
                     # массив вершин этой грани
                     vertexes = list(self.vertexes[int(n) - 1] for n in buf)
+                    real_vertexes = \
+                        list(self.real_vertexes[int(n) - 1] for n in buf)
                     # задание рёбер грани
                     for n in range(size):
                         self.edges.append(Edge(vertexes[n - 1], vertexes[n]))
+                        self.real_edges.append(
+                            Edge(real_vertexes[n-1], real_vertexes[n])
+                            )
                     # задание самой грани
                     self.facets.append(Facet(vertexes))
+                    self.real_facets.append(Facet(real_vertexes))
 
     # Метод изображения полиэдра
     def draw(self, tk):
@@ -167,3 +181,27 @@ class Polyedr:
                 e.shadow(f)
             for s in e.gaps:
                 tk.draw_line(e.r3(s.beg), e.r3(s.fin))
+
+    def task(self):
+        for e in self.real_edges:
+            for f in self.real_facets:
+                e.shadow(f)
+            # считаем общую длину отрезков которые требуется нарисовать
+            _sum = 0
+            for s in e.gaps:
+                # s - элемент класса Segment
+                _sum += (s.fin - s.beg)
+            #print(_sum)
+            # проверяем есть ли рёбра которые мы не рисуем
+            if _sum < 1e-9:
+                self.inv_edges.append(e)
+        print(len(self.inv_edges)//2)
+
+        total = 0
+        for edge in self.inv_edges:
+            if ((edge.beg.y + edge.fin.y)/2)**2 + \
+                ((edge.beg.x + edge.fin.x)/2)**2 < 4:
+                length = (edge.fin.x - edge.beg.x)**2 + \
+                    (edge.fin.y - edge.beg.y)**2 + (edge.fin.z - edge.beg.z)**2
+                total += length
+        return total/2
