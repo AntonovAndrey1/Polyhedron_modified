@@ -173,15 +173,6 @@ class Polyedr:
                     self.facets.append(Facet(vertexes))
                     self.real_facets.append(Facet(real_vertexes))
 
-    # Метод изображения полиэдра
-    def draw(self, tk):
-        tk.clean()
-        for e in self.edges:
-            for f in self.facets:
-                e.shadow(f)
-            for s in e.gaps:
-                tk.draw_line(e.r3(s.beg), e.r3(s.fin))
-
     def task(self):
         for e in self.real_edges:
             for f in self.real_facets:
@@ -191,17 +182,27 @@ class Polyedr:
             for s in e.gaps:
                 # s - элемент класса Segment
                 _sum += (s.fin - s.beg)
-            #print(_sum)
             # проверяем есть ли рёбра которые мы не рисуем
             if _sum < 1e-9:
                 self.inv_edges.append(e)
-        print(len(self.inv_edges)//2)
+        # print(len(self.inv_edges)//2)
 
         total = 0
         for edge in self.inv_edges:
-            if ((edge.beg.y + edge.fin.y)/2)**2 + \
-                ((edge.beg.x + edge.fin.x)/2)**2 < 4:
+            mid_y = (edge.beg.y + edge.fin.y) / 2
+            mid_x = (edge.beg.x + edge.fin.x) / 2
+            if mid_y**2 + mid_x**2 < 4:
                 length = (edge.fin.x - edge.beg.x)**2 + \
-                    (edge.fin.y - edge.beg.y)**2 + (edge.fin.z - edge.beg.z)**2
+                         (edge.fin.y - edge.beg.y)**2 + \
+                         (edge.fin.z - edge.beg.z)**2
                 total += length
         return total/2
+
+    # Метод изображения полиэдра
+    def draw(self, tk):  # pragma: no cover
+        tk.clean()
+        for e in self.edges:
+            for f in self.facets:
+                e.shadow(f)
+            for s in e.gaps:
+                tk.draw_line(e.r3(s.beg), e.r3(s.fin))

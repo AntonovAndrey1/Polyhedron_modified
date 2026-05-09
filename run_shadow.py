@@ -16,6 +16,6 @@ try:
         print(f"Изображение полиэдра '{name}' заняло {delta_time} сек.")
         print(Polyedr(f"data/{name}.geom").task())
         input("Hit 'Return' to continue -> ")
-except(EOFError, KeyboardInterrupt):
+except (EOFError, KeyboardInterrupt):
     print("\nStop")
     tk.close()
