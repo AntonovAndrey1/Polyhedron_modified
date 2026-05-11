@@ -14,7 +14,8 @@ try:
         Polyedr(f"data/{name}.geom").draw(tk)
         delta_time = time() - start_time
         print(f"Изображение полиэдра '{name}' заняло {delta_time} сек.")
-        print(Polyedr(f"data/{name}.geom").task())
+        total_length = Polyedr(f"data/{name}.geom").task()
+        print(f"Сумма длин искомых рёбер равна {total_length}")
         input("Hit 'Return' to continue -> ")
 except (EOFError, KeyboardInterrupt):
     print("\nStop")
